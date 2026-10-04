@@ -4,12 +4,15 @@ node_modules/
 # Render / local logs
 *.log
 
-# Local session credentials (you WILL be scanned later, and should NOT be committed)
+# Local session credentials (never commit)
 server/.wa-session/
 
-# OS noise
+# macOS / Windows noise
 .DS_Store
 Thumbs.db
 
-# Don't commit local session state
-.env
+# Nested duplicate folders from older merges
+Food-Menu-main/
+
+# Your GitHub identity
+.gitconfig
