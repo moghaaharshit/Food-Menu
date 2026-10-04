@@ -367,6 +367,18 @@ async function startWhatsApp() {
 const app = express();
 app.use(express.json({ limit: '1mb' }));
 
+// ✅ CORS: the customer PWA (Netlify, https://foodmenu-cafe.netlify.app)
+// must be able to call /api/* from a different origin. This is required
+// because browsers block cross-origin fetch of the bridge's responses,
+// and the API is not on the same host as the website.
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
 /* ─── Static site (SPA) ─── */
 // Serve the customer-facing PWA from this same origin. The front-end is
 // plain static files (index.html, manifest.json, logo.png, images); the
@@ -475,6 +487,24 @@ app.post('/api/whatsapp/send-order', requireKey, async (req, res) => {
     logger.error({ e: e.message }, 'Order send failed');
     res.status(500).json({ ok: false, error: e.message });
   }
+});
+
+// Also allow the CORS preflight for the real send, in case the browser
+// includes the x-api-key header.
+app.options('/api/whatsapp/send-order', requireKey, (req, res) => {
+  res.sendStatus(204);
+});
+
+// Also allow the CORS preflight for the real send, in case the browser
+// includes the x-api-key header.
+app.options('/api/whatsapp/send-order', requireKey, (req, res) => {
+  res.sendStatus(204);
+});
+
+// Also allow the CORS preflight for the real send, in case the browser
+// includes the x-api-key header.
+app.options('/api/whatsapp/send-order', requireKey, (req, res) => {
+  res.sendStatus(204);
 });
 
 app.post('/api/whatsapp/logout', requireKey, async (_req, res) => {

@@ -5361,7 +5361,7 @@
     ];
 
     /* ─── WhatsApp Bridge (Baileys Node server) ─── */
-    const WA_DEFAULT_URL = 'http://localhost:3000';
+    const WA_DEFAULT_URL = 'https://' + (process.env.WA_WEBSITE_URL || 'foodmenu-cafe.netlify.app');
     // Owner number in full international form (country code + number). A bare
     // 10-digit number is not a valid WhatsApp JID, so +91 must be included.
     const WA_OWNER_NUMBER = '919058767686';
