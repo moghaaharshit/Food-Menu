@@ -39,6 +39,63 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /* ─── Configuration ──────────────────────────────────────────────── */
 
 const PORT = Number(process.env.PORT || 3000);
+const SITE_PORT = Number(process.env.SITE_PORT || 8080);
+
+/**
+ * Start the customer-facing static site from the same origin as the bridge.
+ * The PWA and the WhatsApp bridge now share one public URL (one Render
+ * web service), so the admin panel can reach /api/* and /api/whatsapp/QR
+ * while users open the menu, login, and place orders from the same host.
+ */
+import http from 'node:http';
+
+function serveSite() {
+  const site = http.createServer((req, res) => {
+    let pathname;
+    try {
+      pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+    } catch {
+      res.writeHead(400); return res.end('Bad request');
+    }
+    if (pathname === '/') pathname = '/index.html';
+
+    // Resolve inside ROOT and confirm it did not escape via ../ or an absolute path.
+    const target = path.resolve(ROOT, '.' + pathname);
+
+    // Refuse anything inside server/ — it holds auth credentials and node_modules.
+    const relToServer = path.relative(path.join(ROOT, 'server'), target);
+    const insideServer = relToServer === '' ||
+      (!relToServer.startsWith('..') && !path.isAbsolute(relToServer));
+
+    const escapesRoot = target !== ROOT && !target.startsWith(ROOT + path.sep);
+
+    if (insideServer || escapesRoot) {
+      res.writeHead(403, { 'Content-Type': 'text/plain' });
+      return res.end('403 Forbidden — server/ is not served');
+    }
+
+    fs.stat(target, (err, stat) => {
+      if (err || !stat.isFile()) {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        return res.end('404 Not Found');
+      }
+      res.writeHead(200, {
+        'Content-Type': MIME[path.extname(target).toLowerCase()] || 'application/octet-stream',
+        'Cache-Control': 'no-cache',
+      });
+      fs.createReadStream(target).pipe(res);
+    });
+  });
+
+  site.listen(SITE_PORT, () => {
+    console.log(`🍽️  CRISP AND CLOUD website running at  http://localhost:${SITE_PORT}`);
+    console.log(`      Bridge API       ->  http://localhost:${PORT} (WhatsApp alerts)`);
+    console.log(`      Website          ->  http://localhost:${SITE_PORT}`);
+    console.log(`      One process = one public URL: ${PORT} + ${SITE_PORT}`);
+  });
+
+  return site;
+}
 
 /** The owner number in full international form, e.g. 919058767686. */
 const OWNER_NUMBER = normaliseToInternational(process.env.WA_OWNER_NUMBER || '9058767686');
@@ -311,9 +368,9 @@ const app = express();
 app.use(express.json({ limit: '1mb' }));
 
 /* ─── Static site (SPA) ─── */
-// Also serve the customer-facing PWA from this single origin. The front-end is
-// plain static files (index.html, manifest.json, logo.png, images); the server
-// only ever serves them plus its own /api so one deployment = one port.
+// Serve the customer-facing PWA from this same origin. The front-end is
+// plain static files (index.html, manifest.json, logo.png, images); the
+// server only ever serves them plus its own /api so one process = one port.
 
 const __file = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(__file), '..');
@@ -471,19 +528,14 @@ app.use((req, res, next) => {
 // Static assets under /static/[name].[ext].
 app.use('/static', express.static(ROOT, { fallthrough: false }));
 
-// SPA fallback for deep links like /account, /cart, /orders.
-app.use((req, res) => {
-  const raw = req.originalUrl;
-  if (raw.startsWith('/api/')) return res.sendStatus(404);   // unknown API
-  return res.sendFile(path.join(ROOT, 'index.html'));
-});
-
 /** Reject requests that don't carry the shared secret (when configured). */
 function requireKey(req, res, next) {
   if (!API_KEY) return next();                    // dev mode: open
   if (req.get('x-api-key') === API_KEY) return next();
   return res.status(401).json({ ok: false, error: 'Invalid or missing API key' });
 }
+
+serveSite();
 
 app.listen(PORT, () => {
   logger.info(`WhatsApp bridge listening on http://localhost:${PORT}`);
