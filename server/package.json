@@ -1,0 +1,16 @@
+{
+  "name": "crisp-and-cloud-whatsapp-server",
+  "private": true,
+  "description": "Baileys WhatsApp bridge for CRISP AND CLOUD - receives orders and sends formatted WhatsApp notifications",
+  "type": "module",
+  "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "baileys": "^6.7.9",
+    "express": "^4.21.2",
+    "pino": "^9.5.0",
+    "qrcode": "^1.5.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

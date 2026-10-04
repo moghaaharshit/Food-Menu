@@ -1,0 +1,28 @@
+{
+  "name": "crisp-and-cloud",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CRISP AND CLOUD — food ordering PWA + WhatsApp order bridge. Deploy to Render with one click.",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "serve": "node server/serve-site.js",
+    "test": "node server/test-client-helpers.js",
+    "test:numbers": "node server/test-numbers.js",
+    "test:dispatch": "node server/test-dispatch.js",
+    "test:all": "node server/test-numbers.js && node server/test-dispatch.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "baileys": "^6.7.9",
+    "express": "^4.21.2",
+    "pino": "^9.5.0",
+    "qrcode": "^1.5.4"
+  },
+  "packageManager": "npm@11.6.2"
+}

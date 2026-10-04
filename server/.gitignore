@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# WhatsApp linked-device credentials.
+# This folder contains your WhatsApp auth keys. Anyone with these files can
+# take over the linked WhatsApp account — NEVER commit them.
+.wa-session/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS noise
+.DS_Store
+Thumbs.db

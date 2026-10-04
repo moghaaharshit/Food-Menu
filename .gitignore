@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Render / local logs
+*.log
+
+# Local session credentials (you WILL be scanned later, and should NOT be committed)
+server/.wa-session/
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Don't commit local session state
+.env
